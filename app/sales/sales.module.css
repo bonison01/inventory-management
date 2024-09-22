@@ -1,0 +1,28 @@
+.sales-container {
+  padding: 2rem;
+  text-align: center;
+}
+
+.sales-button {
+  padding: 10px 20px;
+  background-color: #005C06;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.sales-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.message-success {
+  color: green;
+  margin-top: 1rem;
+}
+
+.message-error {
+  color: red;
+  margin-top: 1rem;
+}
