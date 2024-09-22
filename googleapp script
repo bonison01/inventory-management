@@ -1,0 +1,126 @@
+// Main function to handle all operations: Add, Edit, Delete, View
+function doPost(e) {
+  try {
+    var params = JSON.parse(e.postData.contents);
+    Logger.log('Received parameters: ' + JSON.stringify(params)); // Log incoming request
+
+    // Check the action parameter and route accordingly
+    if (params.action === 'add') {
+      return addProduct(params);
+    } else if (params.action === 'edit') {
+      return editProduct(params);
+    } else if (params.action === 'delete') {
+      return deleteProduct(params.rowIndex);
+    } else if (params.action === 'view') {
+      return viewProducts();
+    } else {
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Unknown action" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    Logger.log('Error: ' + error.message);
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Function to add a product to Google Sheets
+function addProduct(params) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');
+    
+    // Append the product data to the sheet
+    sheet.appendRow([
+      params.productName,
+      params.qty,
+      params.sellingPrice,
+      params.trainerPrice,
+      params.storePrice,
+      params.company
+    ]);
+
+    Logger.log('Product added successfully: ' + JSON.stringify(params));
+    return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Product added successfully" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    Logger.log('Error adding product: ' + error.message);
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Function to edit a product in Google Sheets
+function editProduct(params) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');
+    var rowIndex = params.rowIndex; // Get the row index to edit
+
+    // Update the row with the edited data
+    sheet.getRange(rowIndex, 1, 1, 6).setValues([[
+      params.productName, 
+      params.qty, 
+      params.sellingPrice, 
+      params.trainerPrice, 
+      params.storePrice, 
+      params.company
+    ]]);
+
+    Logger.log('Product edited successfully: ' + JSON.stringify(params));
+    return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Product edited successfully" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    Logger.log('Error editing product: ' + error.message);
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Function to delete a product from Google Sheets
+function deleteProduct(rowIndex) {
+  try {
+    if (rowIndex && rowIndex > 1) { // Ensure rowIndex is valid and not the header row
+      var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');
+      sheet.deleteRow(rowIndex); // Delete the row
+      Logger.log('Product deleted successfully');
+      return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Product deleted successfully" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    } else {
+      Logger.log('Invalid row index for deletion');
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Invalid row index" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    Logger.log('Error deleting product: ' + error.message);
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Function to view all products in Google Sheets
+function viewProducts() {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');
+    var data = sheet.getDataRange().getValues();
+    var result = [];
+
+    // Format the data into JSON
+    for (var i = 1; i < data.length; i++) {
+      result.push({
+        productName: data[i][0],
+        qty: data[i][1],
+        sellingPrice: data[i][2],
+        trainerPrice: data[i][3],
+        storePrice: data[i][4],
+        company: data[i][5],
+        rowIndex: i + 1 // Include the row index for edit/delete purposes
+      });
+    }
+
+    Logger.log('Products fetched successfully');
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    Logger.log('Error fetching products: ' + error.message);
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
